@@ -1,11 +1,11 @@
 var express = require("express");
-var burgerModel = require("../models/burger.js");
+var db = require("../models");
 var router = express.Router();
 
 
 router.get("/", function (request, response) {
-    burgerModel.getAllBurgers(function (data) {
-
+    db.burger.findAll().then(function (data) {
+        console.log(data);
         var burgersObj = {
             burgers: data
         }
@@ -16,23 +16,37 @@ router.get("/", function (request, response) {
 router.post("/api/burger", function (request, response) {
     console.log(request.body, "this is request.body");
     var fData = request.body;
-    burgerModel.postBurger(fData, function (data) {
+    db.burger.create(fData).then(function (data) {
         console.log(data, "this is the response from our database insert into");
         response.send("row added to db")
-        // res.send("About burgers")
     })
 })
 
 router.put("/api/burger/:id", function (request, response) {
     console.log(request.params, "this is our request.params");
     var id = request.params.id;
-    burgerModel.putBurger(id, function (data) {
-        console.log(data, "row updated")
-        response.end()
-    })
+    db.burger.update({
+        completed: true
+    }, {
+            where: {
+                id: id
+            }
+        }).then(function (data) {
+            console.log(data, "row updated");
+            response.send("update happened on " + id)
+        })
 })
-router.delete("/api/burger:id", function (request, response) {
-    response.send("About burgers")
+router.delete("/api/burger/:id", function (request, response) {
+    var id = request.params.id
+    console.log(id);
+    db.burger.destroy({
+        where: {
+            id: id
+        }
+    }).then(function (data) {
+        console.log(data);
+    })
+    response.send("Row deleted")
 })
 
 module.exports = router;
