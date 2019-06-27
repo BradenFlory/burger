@@ -1,58 +1,42 @@
 var express = require("express");
-var db = require("../models");
+
 var router = express.Router();
 
+var burgers = require("../models/burger.js");
 
-router.get("/", function (request, response) {
-    db.burger.findAll().then(function (data) {
-        console.log(data);
-        var burgersObj = {
+router.get("/", function (req, res) {
+    res.redirect("burgers")
+});
+
+router.get("/burgers", function (req, res) {
+    burgers.selectAll(function (data) {
+        var hbsObject = {
             burgers: data
-        }
-        response.render("index", burgersObj)
-    })
-})
+        };
+        console.log(hbsObject);
+        res.render("index", hbsObject);
+    });
+});
 
-router.post("/api/burger", function (request, response) {
-    console.log(request.body, "this is request.body");
-    var fData = request.body;
-    db.burger.create(fData).then(function (data) {
-        console.log(data, "this is the response from our database insert into");
-        response.send("row added to db")
-    })
-})
+router.post("/burgers/create", function (req, res) {
+    burgers.insertOne([
+        "burger_name"
+    ], [
+            req.body.burger_name
+        ], function (data) {
+            res.redirect("/burgers");
+        });
+});
 
-router.put("/api/burger/:id", function (request, response) {
-    console.log(request.params, "this is our request.params");
-    var id = request.params.id;
-    db.burger.update({
-        completed: true
-    }, {
-            where: {
-                id: id
-            }
-        }).then(function (data) {
-            console.log(data, "row updated");
-            response.send("update happened on " + id)
-        })
-})
-router.delete("/api/burger/:id", function (request, response) {
-    var id = request.params.id
-    console.log(id);
-    db.burger.destroy({
-        where: {
-            id: id
-        }
-    }).then(function (data) {
-        console.log(data);
-    })
-    response.send("Row deleted")
-})
+router.put("/burgers/update/:id", function (req, res) {
+    var condition = "id = " + req.params.id;
+    console.log("condition", condition);
+
+    burgers.updateOne({
+        "devoured": req.body.devoured
+    }, condition, function (data) {
+        res.redirect("/burgers")
+    });
+});
 
 module.exports = router;
-
-// [RowDataPacket { id: 1, burger_name: 'Train Burger', devoured: 1 },
-//     RowDataPacket { id: 2, burger_name: 'Bacon Ranch Burger', devoured: 0 },
-//     RowDataPacket { id: 3, burger_name: 'Bacon Cheese', devoured: 1 },
-//     RowDataPacket { id: 4, burger_name: 'Hamburger', devoured: 0 },
-//     RowDataPacket { id: 5, burger_name: 'Cheeseburger', devoured: 1 }]
